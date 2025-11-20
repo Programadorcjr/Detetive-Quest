@@ -1,0 +1,274 @@
+// Detetive Quest 
+
+#include <stdio.h>  // inclusão biblioteca tres tipos 
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_CLUES 50  // Defifir variaveis glogais e locais 
+#define MAX_INV   20
+
+// --------- Estado do jogo ----------
+char clues[MAX_CLUES][50];
+int clueCount = 0;
+
+char inventory[MAX_INV][50];
+int invCount = 0;
+
+int timeSpent = 0;
+
+// Suspeitos fixos // matiriz bidimencional de caracteres 
+char suspects[3][30] = {
+    "João Silva ",
+    "Rafael Duarte",
+    "Helena Mota"
+};
+
+// ---------- Funções utilitárias não retorna valor 
+void addClue(const char *c) {
+    for (int i = 0; i < clueCount; i++) {
+        if (strcmp(clues[i], c) == 0) return;
+    }
+    strcpy(clues[clueCount++], c);
+}
+
+void addInv(const char *item) {
+    strcpy(inventory[invCount++], item);
+}
+
+int hasClue(const char *c) {
+    for (int i = 0; i < clueCount; i++) {
+        if (strcmp(clues[i], c) == 0) return 1;
+    }
+    return 0;
+}
+
+void pressEnter() {
+    printf("\nPressione ENTER para continuar...");
+    getchar();
+}
+
+// ----------- Cenas -----------
+void delegacia();
+void cenaCrime();
+void corredor();
+void testemunha();
+void acusar();
+void resolverAcusacao(const char*);
+
+// ---------- Introdução ----------
+void intro() {
+    printf("\n--- DETECTIVE QUEST (C VERSION) ---\n");
+    printf("Você é o detetive Diogo. Um crime ocorreu e você deve resolver.\n");
+}
+
+// ----------- Delegacia -----------
+void delegacia() {
+    int op;
+
+    printf("\n--- Delegacia ---\n");
+    printf("1 - Ir ao local do crime\n");
+    printf("2 - Interrogar testemunha\n");
+    printf("3 - Ver inventário\n");
+    printf("4 - Fazer acusação\n");
+    printf("5 - Sair\n");
+    printf("> ");
+    scanf("%d", &op); getchar();
+    timeSpent++;
+
+    switch (op) { // escolher um caminho 
+        case 1: cenaCrime(); break;
+        case 2: testemunha(); break;
+        case 3:
+            printf("\nInventário:\n");
+            for (int i = 0; i < invCount; i++)
+                printf(" - %s\n", inventory[i]);
+            pressEnter();
+            delegacia();
+            break;
+        case 4: acusar(); break;
+        case 5:
+            printf("Saindo...\n"); exit(0);
+        default: delegacia();
+    }
+}
+
+// --------- Cena do Crime ---------
+void cenaCrime() {
+    int op;
+
+    printf("\n--- Cena do Crime ---\n");
+    printf("1 - Examinar sala\n");
+    printf("2 - Examinar escritório\n");
+    printf("3 - Ir ao corredor do prédio\n");
+    printf("4 - Voltar à delegacia\n");
+    printf("> ");
+    scanf("%d", &op); getchar();
+    timeSpent++;
+
+    if (op == 1) {
+        if (!hasClue("pegadas")) {
+            printf("Você encontra pegadas perto da janela e um bilhete cifrado.\n");
+            addClue("pegadas");
+            addClue("bilhete");
+        } else {
+            printf("Nada novo por aqui.\n");
+        }
+        pressEnter();
+        cenaCrime();
+
+    } else if (op == 2) {
+        if (!hasClue("livro amarelo")) {
+            printf("Você encontra um livro amarelo. Dentro há um chaveiro.\n");
+            addClue("livro amarelo");
+            addInv("chaveiro");
+        } else {
+            printf("O escritório já foi vasculhado.\n");
+        }
+        pressEnter();
+        cenaCrime();
+
+    } else if (op == 3) {
+        corredor();
+
+    } else {
+        delegacia();
+    }
+}
+
+// ----------- Corredor -----------
+void interrogatorio(const char* nome);
+
+void corredor() {
+    int op;
+
+    printf("\n--- Corredor ---\n");
+    printf("1 - Ouvir conversas\n");
+    printf("2 - Falar com João\n");
+    printf("3 - Falar com Rafael\n");
+    printf("4 - Voltar à cena\n");
+    printf("> ");
+    scanf("%d", &op); getchar();
+    timeSpent++;
+
+    if (op == 1) {
+        printf("Você ouve sobre um carro prata que saiu rápido.\n");
+        addClue("carro prata");
+        pressEnter();
+        corredor();
+
+    } else if (op == 2) {
+        interrogatorio("João Silva");
+
+    } else if (op == 3) {
+        interrogatorio("Rafael Duarte");
+
+    } else {
+        cenaCrime();
+    }
+}
+
+// -------- Interrogatório --------
+void interrogatorio(const char* nome) {
+    printf("\n--- Interrogando %s ---\n", nome);
+
+    if (strcmp(nome, "João Silva") == 0) {
+        if (!hasClue("alibi joão")) {
+            printf("João diz estar em um bar e viu Rafael no prédio.\n");
+            addClue("alibi joão");
+        } else {
+            printf("Ele repete o que já disse.\n");
+        }
+
+    } else {
+        if (!hasClue("tinta azul")) {
+            printf("A jaqueta de Rafael tem manchas de tinta azul.\n");
+            addClue("tinta azul");
+        } else {
+            printf("Rafael evita contato.\n");
+        }
+    }
+
+    pressEnter();
+    corredor();
+}
+
+// ---------- Testemunha ----------
+void testemunha() {
+    int op;
+
+    printf("\n--- Testemunha ---\n");
+    printf("1 - Perguntar sobre roupas\n");
+    printf("2 - Perguntar sobre carro\n");
+    printf("3 - Voltar à delegacia\n");
+    printf("> ");
+    scanf("%d", &op); getchar();
+    timeSpent++;
+
+    if (op == 1) {
+        printf("A testemunha viu tinta azul na roupa do suspeito.\n");
+        addClue("tinta azul");
+        pressEnter();
+        testemunha();
+
+    } else if (op == 2) {
+        printf("O suspeito fugiu em um carro prata às 02:10.\n");
+        addClue("hora carro");
+        pressEnter();
+        testemunha();
+
+    } else {
+        delegacia();
+    }
+}
+
+// --------- Acusar ---------
+void acusar() {
+    int op;
+
+    printf("\n--- Quem você acusa? ---\n");
+    for (int i = 0; i < 3; i++)
+        printf("%d - %s\n", i+1, suspects[i]);
+
+    printf("4 - Cancelar\n");
+    printf("> ");
+    scanf("%d", &op); getchar();
+    timeSpent++;
+
+    if (op >= 1 && op <= 3) {
+        resolverAcusacao(suspects[op-1]);
+    } else {
+        delegacia();
+    }
+}
+
+// --------- Resultado da Acusação ---------
+void resolverAcusacao(const char *nome) {
+    const char *culpado = "Rafael Duarte";
+
+    printf("\nVocê acusa %s...\n", nome);
+
+    int temProvas = hasClue("tinta azul") &&
+                    hasClue("carro prata");
+
+    if (strcmp(nome, culpado) == 0 && temProvas) {
+        printf("\n✔ Caso resolvido! Rafael confessa.\n");
+    } else {
+        printf("\n✘ Acusação falhou. Faltam provas ou suspeito errado.\n");
+    }
+
+    printf("\nPistas coletadas:\n");
+    for (int i = 0; i < clueCount; i++)
+        printf(" - %s\n", clues[i]);
+
+    printf("\nAções usadas: %d\n", timeSpent);
+
+    printf("\nFim do jogo.\n");
+    exit(0);
+}
+
+// ----------- MAIN -----------
+int main() {
+    intro();
+    delegacia();
+    return 0;
+}
